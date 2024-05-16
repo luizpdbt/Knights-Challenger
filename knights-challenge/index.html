@@ -1,0 +1,597 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knights - Sistema de Cadastro de Heróis</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <style>
+        /* Estilos do banner "Heroes" */
+        .navbar {
+            background-color: #28a745; /* Verde */
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            color: #fff; /* Cor do texto */
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .navbar-links {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        .navbar-links li {
+            margin-right: 20px;
+        }
+
+        .navbar-links li:last-child {
+            margin-right: 0;
+        }
+
+        .navbar-links a {
+            color: #fff; /* Cor do texto */
+            text-decoration: none;
+            font-size: 18px;
+        }
+
+        .navbar-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Estilos do formulário */
+        form {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        select{
+          width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            background-color: #337ab7;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #286090;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        li span {
+            margin-right: 10px;
+        }
+
+        /* Estilos do modal */
+        .modal-mask {
+            position: fixed;
+            z-index: 9998;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-wrapper {
+            max-width: 600px;
+            max-height: 80%;
+            overflow: auto;
+        }
+
+        .modal-container {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .modal-close-button {
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+
+        table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+
+
+
+        .modal {
+            display: none; /* Ocultar modal por padrão */
+            position: fixed; /* Posição fixa para cobrir toda a tela */
+            z-index: 1; /* Z-index para garantir que o modal esteja acima de outros elementos */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; /* Adicionar rolagem se o conteúdo for maior que a tela */
+            background-color: rgba(0, 0, 0, 0.4); /* Fundo semi-transparente */
+          }
+
+          /* Estilos para o conteúdo do modal */
+          .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px; /* Largura máxima do modal */
+            border-radius: 10px;
+          }
+
+          /* Estilos para o botão de fechar */
+          .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+          }
+
+          .close:hover,
+          .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+          }
+    </style>
+    <script type="text/x-template" id="modal-template">
+      <transition name="modal">
+        <div class="modal-mask">
+          <div class="modal-wrapper">
+            <div class="modal-container">
+              <div class="modal-body">  
+                <slot name="body">
+                  <label>Change NickName:</label>
+                  <input type="text" id="nicknamechange">
+                  <div class="modal-footer">
+                    <slot name="footer">
+                      <button class="modal-default-button" @click="$emit('inf-heroi')">
+                        Alterar
+                      </button>
+                    </slot>
+                  </div>
+                  <hr>
+                    <h3>Warrior Inf:</h3>
+                    <label>Name:</label>
+                    <input type="text" disabled v-model="items.name">
+                    <br>
+                    <label>Birthday:</label>
+                    <input type="text" disabled v-model="items.birthday">
+                    <br>
+                    <label>KeyAtribute:</label>
+                    <input type="text" disabled v-model="items.keyAtribute">
+                    <br>
+                    <label>NickName:</label>
+                    <input type="text" disabled v-model="items.nickname">
+                    <br>
+                    <hr>
+                    <h3>Attributes:</h3>
+                    <label>Charisma:</label>
+                    <input type="text" disabled v-model="items.attributes.charisma">
+                    <br>
+                    <label>Constitution:</label>
+                    <input type="text" disabled v-model="items.attributes.constitution">
+                    <br>
+                    <label>Dexterity:</label>
+                    <input type="text" disabled v-model="items.attributes.dexterity">
+                    <br>
+                    <label>Intelligence:</label>
+                    <input type="text" disabled v-model="items.attributes.intelligence">
+                    <br>
+                    <label>Strength:</label>
+                    <input type="text" disabled v-model="items.attributes.strength">
+                    <br>
+                    <label>Wisdom:</label>
+                    <input type="text" disabled v-model="items.attributes.wisdom">
+                    <hr>
+                    <h3>Weapons:</h3>
+                    <ul>
+                      <li v-for="(item, index) in items.weapons" :key="index">
+                        <label>Name:</label>
+                        {{item.name}}
+                        <label>Attribute:</label>
+                        {{item.attr}}
+                        <label>Equiped:</label>
+                        {{item.equipped}}
+                        <label>Mod:</label>
+                        {{item.mod}}
+                        <hr>
+                      </li>
+                    </ul>
+                </div>
+                </slot>
+                <button class="modal-default-button" @click="$emit('close')">
+                  Close
+                </button>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </script>
+</head>
+<body>
+    <div id="app">
+      <modal v-if="showModal" :items="itemList" @inf-heroi="editConfirm" @close="showModal = false"></modal>
+
+      <nav class="navbar">
+          <a href="#" class="navbar-brand">Knights Challenge</a>
+      </nav>
+
+        <button @click="showForm = !showForm">{{ showForm ? 'Fechar Formulário' : 'Add Warrior' }}</button>
+        <button @click="fetchHeroes(true)">Call for Hall Of Heroes</button>
+
+        <div v-if="showForm">
+            <form>
+                <label for="name">Name:</label>
+                <input type="text" placeholder="Name Warrior" id="name" v-model="newHero.name" required ><br>
+  
+                <label for="nickname">NickName:</label>
+                <input type="text" placeholder="NickName" id="nickname" required v-model="newHero.nickname" required><br>
+
+                  <label for="birthday">Data de Nascimento:</label>
+                  <input type="date" placeholder="Birthday" id="birthday" required v-model="newHero.birthday" required><br>
+
+                  <label>KeyAttribute</label>
+                  <br>
+                  <select name="keyattribute" required placeholder="Chose de key attribute" id="keyatrr"  v-model="newHero.keyAtribute">
+                      <option value="strength">strength</option>
+                      <option value="dexterity">dexterity</option>
+                      <option value="constitution">constitution</option>
+                      <option value="intelligence">intelligence</option>
+                      <option value="wisdom">wisdom</option>
+                      <option value="charisma">charisma</option>
+                  </select>
+                  <br>
+
+                  <label for="strenght">Strenght:</label>
+                  <input type="number" id="strenght"  v-model="newHero.attributes.strength" required min="0" required max="20"><br>
+
+                  <label for="dexterity">Dexterity:</label>
+                  <input type="number" id="dexterity" v-model="newHero.attributes.dexterity" required min="0" required max="20"><br>
+
+                  <label for="constitution">Constitution:</label>
+                  <input type="number" id="constitution" v-model="newHero.attributes.constitution" required min="0" required max="20"><br>
+
+                  <label for="intelligence">Intelligence:</label>
+                  <input type="number" id="intelligence" v-model="newHero.attributes.intelligence" required min="0" required max="20"><br>
+
+                  <label for="wisdom">Wisdom:</label>
+                  <input type="number" id="wisdom" v-model="newHero.attributes.wisdom" required min="0" required max="20"><br>
+
+                  <label for="charisma">Charisma:</label>
+                  <input type="number" id="charisma" v-model="newHero.attributes.charisma" required min="0" required max="20"><br>
+
+                  <div v-for="(weapon, index) in newHero.weapons" :key="index">
+                    <h3>Arma {{ index + 1 }}</h3>
+                    <label for="weapon-name">Nome:</label>
+                    <input type="text" v-model="newHero.weapons[index].name" required>
+                    <label for="weapon-mod">Mod:</label>
+                    <input type="number" v-model="newHero.weapons[index].mod" required min="0" required max="20">
+                    <label for="weapon-attr">Atributo:</label>
+                    <input type="text" v-model="newHero.weapons[index].attr" required>
+                    <label for="weapon-equipped">Equipada:</label>
+                    <input type="checkbox" v-model="newHero.weapons[index].equipped">
+                  </div>
+                  <button @click="adicionarArma()">Add New Weapon</button>
+
+                <!-- Adicione os campos restantes conforme necessário -->
+
+                <button v-if="!valorEdicao" type="submit" @click="addHero()">Confirm Warrior</button>
+
+                <button v-if="valorEdicao" type="submit" @click="editConfirm(hero)">Edit Warrior</button>
+            </form>
+        </div>
+        <h2>Lista de Heróis</h2>
+        <table>
+          <thead>
+              <tr>
+                  <th>Name</th>
+                  <th>Age</th>
+                  <th>Count Weapons</th>
+                  <th>Attibutes</th>
+                  <th>Atack</th>
+                  <th>Experience</th>
+                  <th>Actions</th>
+              </tr>
+          </thead>
+          <tbody>
+              <tr v-for="(hero, index) in heroes" :key="index">
+                  <td>{{ hero.name }}</td>
+                  <td>{{ hero.age }}</td>
+                  <td>{{ hero.countWeapons }}</td>
+                  <td>{{ hero.atribute }}</td>
+                  <td>{{ hero.atack }}</td>
+                  <td>{{ hero.experience }}</td>
+                  <td>
+                    <div v-if="!turnHallOfHero">
+                      <button @click="deleteHero(hero.id)">Move To Hall of Heroes</button>
+                    </div>
+                      <button id="show-modal" @click="informacoesHeroi(hero.id)">Informations</button>
+                  </td>
+              </tr>
+          </tbody>
+      </table>
+    </div>
+
+    <script>
+
+      let guidValue = '';
+
+      Vue.component('modal', {
+        template: '#modal-template',
+        props: {
+          items: {
+            type: Object,
+            required: true
+          }
+        }
+    });
+
+        new Vue({
+            el: '#app',
+            data: {
+                turnHallOfHero:false,
+                guidTransition:'',
+                showModal: false,
+                showForm: false,
+                showModalInformacoes:false,
+                itemList: [],
+                newHero: {
+                    name: '',
+                    nickname: '',
+                    birthday: '',
+                    attributes: {
+                        strength: 0,
+                        dexterity: 0,
+                        constitution: 0,
+                        intelligence: 0,
+                        wisdom: 0,
+                        charisma: 0
+                    },
+                    keyAtribute:"",
+                    weapons:[{
+                      "name":"sword",
+                      "mod": 3,
+                      "attr":"strenght",
+                      "equipped":true
+                    }]
+                },
+                valorEdicao : false,
+                heroes: [],
+                heroesEdit:[]
+            },
+            mounted() {
+                this.fetchHeroes(false); // Carrega os heróis quando o componente é montado
+            },
+            methods: {
+              async fetchHeroes(hallOfHero){
+                if(hallOfHero)
+                {
+                  this.turnHallOfHero = true;
+                }
+                 const url = `https://localhost:44318/api/challanger/knight?filterHallHeroes=${hallOfHero}`;
+                  try {
+                      const response = await axios.get(url);
+                      this.heroes = response.data;
+                      console.log(response.data);
+                      return response.data; // Se você quiser retornar os dados
+                  } catch (error) {
+                      console.error('Erro ao fazer a requisição:', error);
+                      throw error; // Se você quiser lançar o erro para que seja tratado em outro lugar
+                  }
+                },
+                validaCamposEntradaFormulario()
+                {
+                  if(this.newHero.name == '' ||
+                     this.newHero.birthday == '' ||
+                     this.newHero.nickname == '' ||
+                     this.newHero.keyAtribute == ''
+                  )
+                  {
+                    return true;
+                  }
+                },
+                adicionarArma() {
+                  this.newHero.weapons.push({ name: '', mod: 0, attr: '', equipped: false });
+                },
+                async addHero() {
+                    // Simulando a adição de um novo herói
+                    if(this.validaCamposEntradaFormulario()){
+                      return alert('You need to fill the fields')
+                    }
+                    else{
+                      try {
+                          const response = await axios.post('https://localhost:44318/api/challanger/knight', this.newHero);
+                          console.log(response.data);
+                          // Atualize o grid apenas após a inserção bem-sucedida
+                          await this.fetchHeroes(false);
+                      } catch (error) {
+                          console.error('Erro ao fazer a requisição:', error);
+                      }
+                    }
+                      //this.resetForm();
+                },
+                editHero(hero){
+                  console.log('Herói editado:', hero);
+                  this.showModal = true;
+                  guidValue = hero;
+                  guidTransition = hero;
+                },
+                editConfirm(){
+
+                  var newnickName = document.getElementById('nicknamechange').value;
+                  const url = `https://localhost:44318/api/challanger/knight?guid=${guidValue}&newName=${newnickName}`;
+                  axios.put(url)
+                    .then(response => {
+                      if(this.turnHallOfHero)
+                      {
+                        this.fetchHeroes(true);
+                      }
+                      else{
+                        this.fetchHeroes(false);
+                      }
+                      //this.heroes = response.data;
+                      console.log(response.data);
+                    })
+                    .catch(error => {
+                      console.error('Erro ao fazer a requisição:', error);
+                    });
+
+                  this.showModal = false;
+
+                  console.log('confirmando edicao')
+                },
+                async informacoesHeroi(idHeroi){
+                  guidValue = idHeroi;
+                  const url = `https://localhost:44318/api/challanger/knightById?id=${guidValue}`;
+                  await axios.get(url)
+                    .then(response => {
+                      this.itemList = response.data;
+                      console.log(response.data);
+                      this.showModal = true;
+                    })
+                    .catch(error => {
+                      console.error('Erro ao fazer a requisição:', error);
+                    });
+                },
+                closeModal(){
+                  this.showModal = false;
+                },
+                editCancel(){
+                  this.valorEdicao = false;
+                  this.resetForm();
+                },
+                deleteHero(hero) {
+                  const id = hero;
+                  const url = `https://localhost:44318/api/challanger/knight?id=${id}`;
+                  axios.delete(url)
+                    .then(response => {
+                      this.fetchHeroes(false);
+                      //this.heroes = response.data;
+                      console.log(response.data);
+                    })
+                    .catch(error => {
+                      console.error('Erro ao fazer a requisição:', error);
+                    });
+                },
+                resetForm() {
+                    // Resetando o formulário
+                    this.newHero = {
+                        name: '',
+                        nickname: '',
+                        birthday: '',
+                        attributes: {
+                            strength: 0,
+                            dexterity: 0,
+                            constitution: 0,
+                            intelligence: 0,
+                            wisdom: 0,
+                            charisma: 0
+                        },
+                        keyAtribute:"strength",
+                        weapons:[{
+                          "name":"sword",
+                          "mod": 3,
+                          "attr":"strenght",
+                          "equipped":true
+                        }]
+                    };
+                    this.showForm = false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

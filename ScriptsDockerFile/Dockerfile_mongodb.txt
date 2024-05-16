@@ -1,0 +1,8 @@
+# Use a imagem oficial do MongoDB
+FROM mongo:latest
+
+# Exponha a porta 27017 do contêiner (porta padrão do MongoDB)
+EXPOSE 27017
+
+# Comando padrão para iniciar o servidor MongoDB
+CMD ["mongod"]
